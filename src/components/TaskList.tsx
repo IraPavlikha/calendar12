@@ -31,7 +31,10 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
   const loadTasks = async () => {
     try {
       const user = await AsyncStorage.getItem('currentUser');
-      const key = `tasks-${user}-${formattedDate}`;
+      if (!user) {
+        return; // Якщо користувач не увійшов, не намагатимемося завантажити завдання
+      }
+      const key = `tasks-${user}-${formattedDate}`; // Унікальний ключ для кожного користувача
       const storedTasks = await AsyncStorage.getItem(key);
       if (storedTasks) setTasks(JSON.parse(storedTasks));
       else setTasks([]);
@@ -43,7 +46,8 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
   const saveTasks = async (updatedTasks: Task[]) => {
     try {
       const user = await AsyncStorage.getItem('currentUser');
-      const key = `tasks-${user}-${formattedDate}`;
+      if (!user) return; // Якщо користувач не увійшов, не намагатимемося зберігати завдання
+      const key = `tasks-${user}-${formattedDate}`; // Унікальний ключ для кожного користувача
       await AsyncStorage.setItem(key, JSON.stringify(updatedTasks));
     } catch (error) {
       console.error('Помилка при збереженні завдань', error);
