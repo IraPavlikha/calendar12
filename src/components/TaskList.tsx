@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format } from 'date-fns';
-import { useTheme } from './ThemeContext'; // Імпортуємо контекст
+import { useTheme } from './ThemeContext';
+import { useLanguage } from './LanguageContext'; // імпорт контексту мови
 
 interface Task {
   id: string;
@@ -15,7 +16,9 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
-  const { theme } = useTheme(); // Використовуємо тему з контексту
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
   const formattedDate = format(day, 'yyyy-MM-dd');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState('');
@@ -31,26 +34,24 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
   const loadTasks = async () => {
     try {
       const user = await AsyncStorage.getItem('currentUser');
-      if (!user) {
-        return; // Якщо користувач не увійшов, не намагатимемося завантажити завдання
-      }
-      const key = `tasks-${user}-${formattedDate}`; // Унікальний ключ для кожного користувача
+      if (!user) return;
+      const key = `tasks-${user}-${formattedDate}`;
       const storedTasks = await AsyncStorage.getItem(key);
       if (storedTasks) setTasks(JSON.parse(storedTasks));
       else setTasks([]);
     } catch (error) {
-      console.error('Помилка при завантаженні завдань', error);
+      console.error('Error loading tasks', error);
     }
   };
 
   const saveTasks = async (updatedTasks: Task[]) => {
     try {
       const user = await AsyncStorage.getItem('currentUser');
-      if (!user) return; // Якщо користувач не увійшов, не намагатимемося зберігати завдання
-      const key = `tasks-${user}-${formattedDate}`; // Унікальний ключ для кожного користувача
+      if (!user) return;
+      const key = `tasks-${user}-${formattedDate}`;
       await AsyncStorage.setItem(key, JSON.stringify(updatedTasks));
     } catch (error) {
-      console.error('Помилка при збереженні завдань', error);
+      console.error('Error saving tasks', error);
     }
   };
 
@@ -89,7 +90,7 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
 
   return (
     <View style={styles.modal}>
-      <Text style={styles.title}>Завдання на {format(day, 'dd.MM.yyyy')}</Text>
+      <Text style={styles.title}>{t('tasksFor')} {format(day, 'dd.MM.yyyy')}</Text>
 
       <FlatList
         data={tasks}
@@ -104,23 +105,22 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
             </View>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text style={styles.empty}>Завдань немає</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>{t('noTasks')}</Text>}
       />
 
       <View style={styles.inputContainer}>
         <TextInput
-          placeholder="Нове завдання"
+          placeholder={t('newTask')}
           value={newTask}
           onChangeText={setNewTask}
           style={styles.input}
           placeholderTextColor={theme === 'dark' ? '#aaa' : '#555'}
         />
-        <Button title="Додати" onPress={handleAddTask} />
+        <Button title={t('add')} onPress={handleAddTask} />
       </View>
 
-      <Button title="Закрити" onPress={onClose} color={theme === 'dark' ? '#aaa' : '#666'} />
+      <Button title={t('close')} onPress={onClose} color={theme === 'dark' ? '#aaa' : '#666'} />
 
-      {/* Модальне вікно для редагування завдання */}
       <Modal
         visible={selectedTask !== null}
         animationType="slide"
@@ -129,16 +129,16 @@ const TaskList: React.FC<TaskListProps> = ({ day, onClose }) => {
       >
         <View style={styles.editOverlay}>
           <View style={styles.editModal}>
-            <Text style={styles.editTitle}>Редагування</Text>
+            <Text style={styles.editTitle}>{t('edit')}</Text>
             <TextInput
               value={editedText}
               onChangeText={setEditedText}
               style={styles.input}
-              placeholder="Змінити завдання"
+              placeholder={t('newTask')}
               placeholderTextColor={theme === 'dark' ? '#aaa' : '#555'}
             />
-            <Button title="Зберегти" onPress={handleSaveEdit} />
-            <Button title="Скасувати" onPress={() => setSelectedTask(null)} color={theme === 'dark' ? '#aaa' : '#666'} />
+            <Button title={t('save')} onPress={handleSaveEdit} />
+            <Button title={t('cancel')} onPress={() => setSelectedTask(null)} color={theme === 'dark' ? '#aaa' : '#666'} />
           </View>
         </View>
       </Modal>

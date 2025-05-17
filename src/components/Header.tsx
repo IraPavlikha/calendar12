@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Theme } from './theme'; // Імпортуємо тип теми
+import { Theme } from './theme';
 
 interface HeaderProps {
   month: string;
@@ -9,7 +9,7 @@ interface HeaderProps {
   onNextMonth: () => void;
   onToday: () => void;
   currentDate: Date;
-  theme: Theme; // Додаємо тему як проп
+  theme: Theme;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -44,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(intervalId);
   }, []);
 
-  const textColor = theme === 'dark' ? '#fff' : '#000'; // Вибір кольору тексту в залежності від теми
+  const textColor = theme === 'dark' ? '#fff' : '#000';
 
   return (
     <View style={[styles.header, { backgroundColor: theme === 'dark' ? '#333' : '#fff' }]}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Text, Button, View } from 'react-native';
 import Calendar from './src/components/Calendar';
 import AuthScreen from './src/components/AuthScreen';
+import { LanguageProvider } from './src/components/LanguageContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider, useTheme } from './src/components/ThemeContext'; // контекст теми
 
@@ -48,7 +49,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AppContent />
+      <LanguageProvider>
+              <AppContent />
+      </LanguageProvider>
     </ThemeProvider>
   );
 };

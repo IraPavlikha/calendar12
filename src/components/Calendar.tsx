@@ -1,23 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, Dimensions, TouchableOpacity } from 'react-native';
-import { addMonths, subMonths, startOfMonth, getDay, getDaysInMonth, format } from 'date-fns';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  Dimensions,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import {
+  addMonths,
+  subMonths,
+  startOfMonth,
+  getDay,
+  getDaysInMonth,
+  format,
+} from 'date-fns';
+import { uk, enUS } from 'date-fns/locale';
+
 import Header from './Header';
 import Day from './Day';
 import TaskList from './TaskList';
 
+import { useLanguage } from './LanguageContext'; // <-- імпорт контексту
+
 const { width, height } = Dimensions.get('window');
 
+const locales = { uk, enUS };
+
 const Calendar: React.FC<{ theme: string }> = ({ theme }) => {
+  const { language, setLanguage } = useLanguage();
+
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(format(currentDate, 'MMMM'));
-  const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState('');
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  const locale = language === 'uk' ? uk : enUS;
 
   useEffect(() => {
-    setCurrentMonth(format(currentDate, 'MMMM'));
+    setCurrentMonth(format(currentDate, 'MMMM', { locale }));
     setCurrentYear(currentDate.getFullYear());
-  }, [currentDate]);
+  }, [currentDate, locale]);
 
   const generateCalendarDays = (date: Date) => {
     const startOfCurrentMonth = startOfMonth(date);
@@ -47,12 +72,19 @@ const Calendar: React.FC<{ theme: string }> = ({ theme }) => {
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const handleToday = () => setCurrentDate(new Date());
 
+  const getWeekDays = (locale: Locale) => {
+    const baseDate = new Date(2021, 0, 3);
+    return Array.from({ length: 7 }).map((_, i) =>
+      format(new Date(baseDate.getTime() + i * 86400000), 'EE', { locale }),
+    );
+  };
+
+  const weekDays = getWeekDays(locale);
   const days = generateCalendarDays(currentDate);
-  const weekDays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
   const handleDayPress = (day: number) => {
     if (day > 0) {
-      const selectedDate = new Date(currentYear, new Date().getMonth(), day);
+      const selectedDate = new Date(currentYear, currentDate.getMonth(), day);
       setSelectedDay(selectedDate);
       setIsModalVisible(true);
     }
@@ -60,6 +92,22 @@ const Calendar: React.FC<{ theme: string }> = ({ theme }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme === 'light' ? '#f5f5f5' : '#222' }]}>
+      {/* Перемикач мов */}
+      <View style={styles.languageSwitcher}>
+        <TouchableOpacity
+          style={[styles.langButton, language === 'uk' && styles.langButtonActive]}
+          onPress={() => setLanguage('uk')}
+        >
+          <Text style={[styles.langText, language === 'uk' && styles.langTextActive]}>Українська</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.langButton, language === 'en' && styles.langButtonActive]}
+          onPress={() => setLanguage('en')}
+        >
+          <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>English</Text>
+        </TouchableOpacity>
+      </View>
+
       <Header
         month={currentMonth}
         year={currentYear}
@@ -86,7 +134,7 @@ const Calendar: React.FC<{ theme: string }> = ({ theme }) => {
             isCurrentMonth={day > 0}
             isToday={
               day === new Date().getDate() &&
-              currentMonth === format(new Date(), 'MMMM') &&
+              currentMonth === format(new Date(), 'MMMM', { locale }) &&
               currentYear === new Date().getFullYear()
             }
             isInRange={false}
@@ -114,11 +162,36 @@ const Calendar: React.FC<{ theme: string }> = ({ theme }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
     paddingHorizontal: 10,
+  },
+  languageSwitcher: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  langButton: {
+    marginHorizontal: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#888',
+  },
+  langButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  langText: {
+    color: '#888',
+    fontWeight: '600',
+  },
+  langTextActive: {
+    color: '#fff',
   },
   weekdaysContainer: {
     flexDirection: 'row',
@@ -154,6 +227,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

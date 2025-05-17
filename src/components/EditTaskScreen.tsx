@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Picker } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalization } from './LocalizationContext'; // Імпорт контексту
 
 const EditTaskScreen = ({ route, navigation }) => {
   const { task, index, date, tasks } = route.params;
   const [editedTask, setEditedTask] = useState(task);
+
+  const { language, setLanguage, t } = useLocalization();
 
   const saveEditedTask = async () => {
     const updatedTasks = [...tasks];
@@ -22,14 +25,29 @@ const EditTaskScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Редагувати завдання</Text>
+      <Text style={styles.title}>{t('editTask')}</Text>
+
+      {/* Вибір мови */}
+      <View style={styles.languagePicker}>
+        <Text style={{ color: '#fff', marginRight: 10 }}>Language:</Text>
+        <Picker
+          selectedValue={language}
+          style={{ height: 50, width: 150, color: '#fff' }}
+          onValueChange={(itemValue) => setLanguage(itemValue)}
+          mode="dropdown"
+        >
+          <Picker.Item label="Українська" value="uk" />
+          <Picker.Item label="English" value="en" />
+        </Picker>
+      </View>
+
       <TextInput
         style={styles.input}
         value={editedTask}
         onChangeText={setEditedTask}
       />
-      <Button title="Зберегти" onPress={saveEditedTask} />
-      <Button title="Видалити" onPress={deleteTask} color="#ff5555" />
+      <Button title={t('save')} onPress={saveEditedTask} />
+      <Button title={t('delete')} onPress={deleteTask} color="#ff5555" />
     </View>
   );
 };
@@ -53,6 +71,11 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     borderRadius: 10,
+  },
+  languagePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
   },
 });
 
